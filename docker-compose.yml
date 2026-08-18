@@ -1,0 +1,25 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app
+      - ./storage:/storage
+    environment:
+      - DATABASE_URL=sqlite:////storage/app.db
+      - VIDEO_STORAGE_DIR=/storage/videos
+      - FRAME_STORAGE_DIR=/storage/frames
+      - CORS_ORIGINS=http://localhost:5173
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/index.html:/app/index.html
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    depends_on:
+      - backend
