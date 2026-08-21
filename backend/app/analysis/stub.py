@@ -14,6 +14,13 @@ from app.models import Player, PointOutcome, ShotType
 SERVE_SPEED_RANGE = (35.0, 55.0)  # m/s, ~126-198 km/h
 GROUNDSTROKE_SPEED_RANGE = (15.0, 35.0)  # m/s, ~54-126 km/h
 
+# Contact routinely happens outside the lines -- running down a wide/deep
+# ball, or simply serving from behind the baseline -- so contact points are
+# sampled over a padded region rather than clamped to the court. Bounces,
+# by contrast, always land in play here (out bounces aren't modeled yet).
+CONTACT_X_MARGIN = 1.5  # meters outside each sideline
+CONTACT_Y_MARGIN = 4.0  # meters behind each baseline
+
 _OTHER_PLAYER = {
     Player.PLAYER_1: Player.PLAYER_2,
     Player.PLAYER_2: Player.PLAYER_1,
@@ -27,13 +34,20 @@ def _random_court_point(rng: random.Random) -> tuple[float, float]:
     )
 
 
+def _random_contact_point(rng: random.Random) -> tuple[float, float]:
+    return (
+        rng.uniform(-CONTACT_X_MARGIN, SINGLES_COURT_WIDTH + CONTACT_X_MARGIN),
+        rng.uniform(-CONTACT_Y_MARGIN, SINGLES_COURT_LENGTH + CONTACT_Y_MARGIN),
+    )
+
+
 def _random_shot(
     rng: random.Random,
     hitter: Player,
     shot_type: ShotType,
     t: float,
 ) -> dict:
-    contact_x, contact_y = _random_court_point(rng)
+    contact_x, contact_y = _random_contact_point(rng)
     bounce_x, bounce_y = _random_court_point(rng)
 
     speed_range = SERVE_SPEED_RANGE if shot_type == ShotType.SERVE else GROUNDSTROKE_SPEED_RANGE
